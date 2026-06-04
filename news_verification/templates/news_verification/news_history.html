@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}News History - Fake News Detection{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Verification History 📋</h1>
+            <p>View all your past news submissions and analysis</p>
+        </div>
+        <a href="{% url 'news:submit_news' %}" class="btn btn-primary-custom btn-custom">
+            <i class="bi bi-plus-circle"></i> Submit New News
+        </a>
+    </div>
+</div>
+
+<!-- Filter Options -->
+<div class="stat-card mb-4 fade-in-up">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <select class="form-select" id="filterPrediction" onchange="filterSubmissions()">
+                <option value="all">All Predictions</option>
+                <option value="fake">Fake News Only</option>
+                <option value="real">Real News Only</option>
+                <option value="pending">Pending Only</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="sortOrder" onchange="filterSubmissions()">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="confidence">Highest Confidence</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search by title..." onkeyup="filterSubmissions()">
+        </div>
+    </div>
+</div>
+
+<!-- Submissions Grid -->
+{% if submissions %}
+    <div class="row g-4" id="submissionsContainer">
+        {% for submission in submissions %}
+        <div class="col-lg-6 submission-item" 
+             data-prediction="{{ submission.prediction }}" 
+             data-title="{{ submission.title|lower }}"
+             data-date="{{ submission.created_at|date:'Y-m-d' }}"
+             data-confidence="{{ submission.confidence_score|default:0 }}">
+            <div class="stat-card h-100 fade-in-up">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        {% if submission.prediction == 'fake' %}
+                            <span class="badge-custom badge-fake">
+                                <i class="bi bi-x-circle"></i> Fake News
+                            </span>
+                        {% elif submission.prediction == 'real' %}
+                            <span class="badge-custom badge-real">
+                                <i class="bi bi-check-circle"></i> Real News
+                            </span>
+                        {% else %}
+                            <span class="badge-custom badge-pending">
+                                <i class="bi bi-hourglass"></i> Pending
+                            </span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> {{ submission.created_at|timesince }} ago
+                    </small>
+                </div>
+                
+                <!-- Title -->
+                <h5 class="fw-bold mb-2">{{ submission.title|truncatewords:12 }}</h5>
+                
+                <!-- Content Preview -->
+                <p class="text-muted mb-3">{{ submission.content|truncatewords:20 }}</p>
+                
+                <!-- Stats -->
+                <div class="row g-2 mb-3">
+                    {% if submission.confidence_score %}
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded text-center">
+                            <small class="d-block text-muted">Confidence</small>
+                            <strong class="{% if submission.prediction == 'fake' %}text-danger{% else %}text-success{% endif %}">
+                                {{ submission.confidence_score|floatformat:1 }}%
+                            </strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if submission.sentiment_score %}
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded text-center">
+                            <small class="d-block text-muted">Sentiment</small>
+                            <strong>
+                                {% if submission.sentiment_score > 0 %}
+                                    <i class="bi bi-emoji-smile text-success"></i>
+                                {% elif submission.sentiment_score < 0 %}
+                                    <i class="bi bi-emoji-frown text-danger"></i>
+                                {% else %}
+                                    <i class="bi bi-emoji-neutral text-muted"></i>
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Flagged Keywords -->
+                {% if submission.flagged_keywords %}
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Flagged Keywords:</small>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for keyword in submission.flagged_keywords|slice:":5" %}
+                            <span class="badge bg-secondary">{{ keyword }}</span>
+                        {% endfor %}
+                        {% if submission.flagged_keywords|length > 5 %}
+                            <span class="badge bg-secondary">+{{ submission.flagged_keywords|length|add:"-5" }} more</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                <div class="d-flex gap-2">
+                    <a href="{% url 'news:submission_detail' submission.submission_id %}" 
+                       class="btn btn-outline-primary btn-sm flex-grow-1">
+                        <i class="bi bi-eye"></i> View Details
+                    </a>
+                    <a href="{% url 'feedback:submit_feedback' submission.submission_id %}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-star"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- No Results Message (Hidden by default) -->
+    <div class="stat-card text-center mt-4" id="noResultsMessage" style="display: none;">
+        <div class="stat-card-icon warning mx-auto mb-3">
+            <i class="bi bi-search"></i>
+        </div>
+        <h4>No Results Found</h4>
+        <p class="text-muted">Try adjusting your filters or search query</p>
+    </div>
+    
+{% else %}
+    <!-- Empty State -->
+    <div class="stat-card text-center fade-in-up">
+        <div class="stat-card-icon primary mx-auto mb-3">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <h4>No Submissions Yet</h4>
+        <p class="text-muted mb-4">Start verifying news articles to see your history here</p>
+        <a href="{% url 'news:submit_news' %}" class="btn btn-primary-custom btn-custom">
+            <i class="bi bi-plus-circle"></i> Submit Your First News
+        </a>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterSubmissions() {
+        const predictionFilter = document.getElementById('filterPrediction').value;
+        const sortOrder = document.getElementById('sortOrder').value;
+        const searchText = document.getElementById('searchInput').value.toLowerCase();
+        const items = Array.from(document.querySelectorAll('.submission-item'));
+        let visibleCount = 0;
+        
+        // Filter items
+        items.forEach(item => {
+            const prediction = item.getAttribute('data-prediction');
+            const title = item.getAttribute('data-title');
+            
+            let showPrediction = predictionFilter === 'all' || prediction === predictionFilter;
+            let showSearch = searchText === '' || title.includes(searchText);
+            
+            if (showPrediction && showSearch) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Sort items
+        if (sortOrder === 'oldest') {
+            items.sort((a, b) => {
+                return new Date(a.getAttribute('data-date')) - new Date(b.getAttribute('data-date'));
+            });
+        } else if (sortOrder === 'confidence') {
+            items.sort((a, b) => {
+                return parseFloat(b.getAttribute('data-confidence')) - parseFloat(a.getAttribute('data-confidence'));
+            });
+        } else {
+            items.sort((a, b) => {
+                return new Date(b.getAttribute('data-date')) - new Date(a.getAttribute('data-date'));
+            });
+        }
+        
+        // Reappend sorted items
+        const container = document.getElementById('submissionsContainer');
+        items.forEach(item => container.appendChild(item));
+        
+        // Show/hide no results message
+        const noResults = document.getElementById('noResultsMessage');
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+</script>
+{% endblock %}

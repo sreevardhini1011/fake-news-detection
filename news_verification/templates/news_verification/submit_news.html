@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit News - Verification{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Submit News for Verification</h1>
+    <p>Submit any news article, URL, or text content to check its authenticity</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="stat-card fade-in-up">
+            <form method="post" class="form-custom">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Submission Type</label>
+                    {{ form.submission_type }}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">News Title</label>
+                    {{ form.title }}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">News Content</label>
+                    {{ form.content }}
+                    <small class="text-muted">Paste the full article text here</small>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Source URL (Optional)</label>
+                    {{ form.url }}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary-custom btn-custom">
+                        <i class="bi bi-search"></i> Verify News
+                    </button>
+                    <a href="{% url 'dashboard:user_dashboard' %}" class="btn btn-outline-secondary btn-custom">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

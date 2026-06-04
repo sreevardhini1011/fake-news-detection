@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}User Dashboard - Fake News Detection{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Welcome back, {{ user.get_full_name|default:user.username }}! 👋</h1>
+    <p>Here's what's happening with your news verification today</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up" style="animation-delay: 0.1s">
+            <div class="stat-card-icon primary">
+                <i class="bi bi-file-text"></i>
+            </div>
+            <h3>{{ total_submissions }}</h3>
+            <p>Total Submissions</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up" style="animation-delay: 0.2s">
+            <div class="stat-card-icon danger">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <h3>{{ fake_detected }}</h3>
+            <p>Fake News Detected</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up" style="animation-delay: 0.3s">
+            <div class="stat-card-icon success">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <h3>{{ real_detected }}</h3>
+            <p>Real News Verified</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up" style="animation-delay: 0.4s">
+            <div class="stat-card-icon warning">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h3>{{ pending_verifications }}</h3>
+            <p>Pending Analysis</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Submissions -->
+    <div class="col-lg-8">
+        <div class="custom-table fade-in-up" style="animation-delay: 0.5s">
+            <div class="p-4">
+                <h4 class="mb-4">Recent Submissions</h4>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in recent_submissions %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ submission.title|truncatewords:8 }}</div>
+                            </td>
+                            <td>
+                                {% if submission.prediction == 'fake' %}
+                                <span class="badge-custom badge-fake">Fake</span>
+                                {% elif submission.prediction == 'real' %}
+                                <span class="badge-custom badge-real">Real</span>
+                                {% else %}
+                                <span class="badge-custom badge-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if submission.confidence_score %}
+                                <strong>{{ submission.confidence_score }}%</strong>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ submission.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'news:submission_detail' submission.submission_id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No submissions yet. <a href="{% url 'news:submit_news' %}">Submit your first news</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="stat-card fade-in-up" style="animation-delay: 0.6s">
+            <h4 class="mb-4">Quick Actions</h4>
+            
+            <div class="d-grid gap-3">
+                <a href="{% url 'news:submit_news' %}" class="btn btn-primary-custom btn-custom">
+                    <i class="bi bi-plus-lg"></i> Submit News for Verification
+                </a>
+                
+                <a href="{% url 'news:news_history' %}" class="btn btn-outline-primary btn-custom">
+                    <i class="bi bi-clock-history"></i> View Full History
+                </a>
+                
+                <a href="{% url 'dashboard:analytics' %}" class="btn btn-outline-secondary btn-custom">
+                    <i class="bi bi-graph-up-arrow"></i> View Analytics
+                </a>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i>
+                <strong>Tip:</strong> Submit suspicious news articles to help fight misinformation!
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

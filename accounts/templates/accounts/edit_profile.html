@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Edit Profile</h1>
+    <p>Update your personal information</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="stat-card fade-in-up">
+            <form method="post" enctype="multipart/form-data" class="form-custom">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-telephone"></i> Phone Number
+                    </label>
+                    {{ form.phone_number }}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-info-circle"></i> Bio
+                    </label>
+                    {{ form.bio }}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-image"></i> Profile Picture
+                    </label>
+                    {{ form.profile_picture }}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary-custom btn-custom">
+                        <i class="bi bi-check-circle"></i> Save Changes
+                    </button>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary btn-custom">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

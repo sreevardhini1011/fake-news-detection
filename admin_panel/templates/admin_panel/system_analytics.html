@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}System Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>System Analytics 📊</h1>
+    <p>Comprehensive system performance metrics</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-icon primary">
+                <i class="bi bi-file-text"></i>
+            </div>
+            <h3>{{ total_submissions }}</h3>
+            <p>Total Submissions</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-icon danger">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <h3>{{ fake_count }}</h3>
+            <p>Fake Detected</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-icon success">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <h3>{{ real_count }}</h3>
+            <p>Real Verified</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-icon warning">
+                <i class="bi bi-speedometer"></i>
+            </div>
+            <h3>{{ avg_confidence }}%</h3>
+            <p>Avg Confidence</p>
+        </div>
+    </div>
+</div>
+
+<div class="stat-card fade-in-up">
+    <h4 class="mb-3">Accuracy Rate</h4>
+    <div class="progress" style="height: 30px;">
+        <div class="progress-bar bg-success" style="width: {{ accuracy_rate }}%">
+            {{ accuracy_rate }}%
+        </div>
+    </div>
+    <p class="mt-2 text-muted">Based on {{ total_feedbacks }} user feedbacks</p>
+</div>
+{% endblock %}

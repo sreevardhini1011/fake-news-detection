@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Fake News Detection{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Admin Dashboard 🛡️</h1>
+    <p>System overview and management controls</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up">
+            <div class="stat-card-icon primary">
+                <i class="bi bi-people"></i>
+            </div>
+            <h3>{{ total_users }}</h3>
+            <p>Total Users</p>
+            <small class="text-success">
+                <i class="bi bi-arrow-up"></i> {{ active_users }} active (7d)
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up">
+            <div class="stat-card-icon success">
+                <i class="bi bi-file-text"></i>
+            </div>
+            <h3>{{ total_submissions }}</h3>
+            <p>Total Submissions</p>
+            <small class="text-info">
+                <i class="bi bi-calendar-day"></i> {{ today_submissions }} today
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up">
+            <div class="stat-card-icon danger">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <h3>{{ today_fake }}</h3>
+            <p>Fake Detected Today</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card fade-in-up">
+            <div class="stat-card-icon warning">
+                <i class="bi bi-flag"></i>
+            </div>
+            <h3>{{ pending_reports }}</h3>
+            <p>Pending Reports</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="stat-card fade-in-up">
+            <h4 class="mb-4">Weekly Submission Trend</h4>
+            <canvas id="weeklyTrendChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="stat-card fade-in-up">
+            <h4 class="mb-4">Active Model</h4>
+            {% if active_model %}
+                <div class="text-center mb-3">
+                    <div class="stat-card-icon primary mx-auto mb-3">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <h5 class="fw-bold">{{ active_model.version_name }}</h5>
+                    <p class="text-muted">{{ active_model.model_type|title }}</p>
+                </div>
+
+                <a href="{% url 'admin_panel:model_management' %}" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                    <i class="bi bi-gear"></i> Manage Models
+                </a>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> No active model found
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tables Row -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="custom-table fade-in-up">
+            <div class="p-4">
+                <h4 class="mb-3">Flagged Submissions</h4>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>User</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in flagged_submissions %}
+                        <tr>
+                            <td>{{ submission.title|truncatewords:5 }}</td>
+                            <td>{{ submission.user.username }}</td>
+                            <td>
+                                <a href="{% url 'admin_panel:content_moderation' %}" class="btn btn-sm btn-outline-primary">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No flagged submissions</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% if flagged_submissions %}
+                <a href="{% url 'admin_panel:content_moderation' %}" class="btn btn-outline-primary btn-sm w-100">
+                    View All <i class="bi bi-arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="custom-table fade-in-up">
+            <div class="p-4">
+                <h4 class="mb-3">Pending Reports</h4>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Reporter</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in pending_reports_list %}
+                        <tr>
+                            <td>{{ report.reporter.username }}</td>
+                            <td>
+                                <span class="badge bg-warning">{{ report.report_type|title }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_panel:content_moderation' %}" class="btn btn-sm btn-outline-primary">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No pending reports</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% if pending_reports_list %}
+                <a href="{% url 'admin_panel:content_moderation' %}" class="btn btn-outline-primary btn-sm w-100">
+                    View All <i class="bi bi-arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Feedbacks -->
+<div class="row g-4 mt-3">
+    <div class="col-12">
+        <div class="custom-table fade-in-up">
+            <div class="p-4">
+                <h4 class="mb-3">Recent Feedbacks</h4>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Type</th>
+                            <th>Rating</th>
+                            <th>Comments</th>
+                            <th>Submission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fb in recent_feedbacks %}
+                        <tr>
+                            <td>{{ fb.user.username }}</td>
+                            <td>{{ fb.feedback_type|title }}</td>
+                            <td>{{ fb.user_rating }}</td>
+                            <td>{{ fb.comments|default:'-'|truncatechars:60 }}</td>
+                            <td>
+                                {% if fb.submission %}
+                                    <a href="#" class="text-decoration-none">{{ fb.submission.title|truncatewords:6 }}</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No feedback yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if total_feedbacks %}
+                <a href="{% url 'admin_panel:system_analytics' %}" class="btn btn-outline-primary btn-sm w-100">
+                    View Analytics <i class="bi bi-arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="stat-card fade-in-up">
+            <h4 class="mb-3">Quick Actions</h4>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <a href="{% url 'admin_panel:user_management' %}" class="btn btn-outline-primary btn-custom w-100">
+                        <i class="bi bi-people"></i> Manage Users
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'admin_panel:content_moderation' %}" class="btn btn-outline-warning btn-custom w-100">
+                        <i class="bi bi-flag"></i> Moderate Content
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'admin_panel:model_management' %}" class="btn btn-outline-info btn-custom w-100">
+                        <i class="bi bi-cpu"></i> ML Models
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'admin_panel:system_analytics' %}" class="btn btn-outline-success btn-custom w-100">
+                        <i class="bi bi-graph-up"></i> Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Weekly Trend Chart
+    const weekCtx = document.getElementById('weeklyTrendChart');
+    if (weekCtx) {
+        const weekData = {{ week_data|safe }};
+        
+        new Chart(weekCtx, {
+            type: 'bar',
+            data: {
+                labels: weekData.map(d => d.date),
+                datasets: [{
+                    label: 'Submissions',
+                    data: weekData.map(d => d.count),
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

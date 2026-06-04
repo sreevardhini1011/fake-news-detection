@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Verification Result{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Verification Result</h1>
+    <p>Analysis completed for your submitted news</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Prediction Result Card -->
+        <div class="stat-card fade-in-up mb-4">
+            <div class="text-center mb-4">
+                {% if submission.prediction == 'fake' %}
+                <div class="stat-card-icon danger mx-auto">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <h2 class="text-danger fw-bold">FAKE NEWS DETECTED</h2>
+                <p class="text-muted">This content is likely to be fake or misleading</p>
+                {% elif submission.prediction == 'real' %}
+                <div class="stat-card-icon success mx-auto">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <h2 class="text-success fw-bold">REAL NEWS</h2>
+                <p class="text-muted">This content appears to be credible</p>
+                {% endif %}
+            </div>
+            
+            <!-- Confidence Meter -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-semibold">Confidence Score</span>
+                    <span class="fw-bold">{{ submission.confidence_score }}%</span>
+                </div>
+                <div class="progress" style="height: 25px; border-radius: 12px;">
+                    <div class="progress-bar {% if submission.prediction == 'fake' %}bg-danger{% else %}bg-success{% endif %}" 
+                         style="width: {{ submission.confidence_score }}%">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Probabilities -->
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted d-block">Fake Probability</small>
+                        <h4 class="text-danger mb-0">{{ submission.fake_probability }}%</h4>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted d-block">Real Probability</small>
+                        <h4 class="text-success mb-0">{{ submission.real_probability }}%</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Explanation -->
+            <div class="alert alert-info">
+                <h5><i class="bi bi-info-circle"></i> Analysis Explanation</h5>
+                <p class="mb-0">{{ submission.explanation }}</p>
+            </div>
+        </div>
+        
+        <!-- Original Content -->
+        <div class="stat-card fade-in-up">
+            <h4 class="mb-3">Submitted Content</h4>
+            <h5 class="fw-bold">{{ submission.title }}</h5>
+            <p class="text-muted">{{ submission.content|truncatewords:100 }}</p>
+            
+            {% if submission.url %}
+            <a href="{{ submission.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-link-45deg"></i> View Source
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Side Panel -->
+    <div class="col-lg-4">
+        <!-- Flagged Keywords -->
+        <div class="stat-card fade-in-up mb-4">
+            <h5 class="mb-3">Flagged Keywords</h5>
+            <div class="d-flex flex-wrap gap-2">
+                {% for keyword in submission.flagged_keywords %}
+                <span class="badge bg-secondary">{{ keyword }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="stat-card fade-in-up">
+            <h5 class="mb-3">Actions</h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'feedback:submit_feedback' submission.submission_id %}" class="btn btn-outline-primary btn-custom">
+                    <i class="bi bi-star"></i> Rate This Analysis
+                </a>
+                <a href="{% url 'feedback:report_content' submission.submission_id %}" class="btn btn-outline-warning btn-custom">
+                    <i class="bi bi-flag"></i> Report Issue
+                </a>
+                <a href="{% url 'news:submit_news' %}" class="btn btn-primary-custom btn-custom">
+                    <i class="bi bi-plus"></i> Submit Another
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

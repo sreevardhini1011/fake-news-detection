@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fake News Detection System{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #06b6d4;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #0f172a;
+            --light-bg: #f8fafc;
+            --sidebar-width: 280px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light-bg);
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%);
+            padding: 2rem 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-logo {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-logo h3 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sidebar-logo i {
+            color: var(--secondary-color);
+            font-size: 2rem;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sidebar-menu li {
+            margin: 0.5rem 0;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: var(--secondary-color);
+        }
+        
+        .sidebar-menu i {
+            font-size: 1.25rem;
+            width: 24px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background: var(--light-bg);
+        }
+        
+        /* Top Navbar */
+        .top-navbar {
+            background: lightgreen;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+        }
+        
+        .search-bar input {
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1.5rem;
+            width: 100%;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 1.5rem;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Content Container */
+        .content-container {
+            padding: 2rem;
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+        
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #f1f5f9;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card-icon.primary {
+            background: linear-gradient(135deg, #3c6881ff, #5c9dafff);
+            color: white;
+        }
+        
+        .stat-card-icon.success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+        }
+        
+        .stat-card-icon.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: white;
+        }
+        
+        .stat-card-icon.warning {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-card p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+        
+        /* Tables */
+        .custom-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .custom-table table {
+            margin-bottom: 0;
+        }
+        
+        .custom-table thead {
+            background: var(--dark-bg);
+            color: white;
+        }
+        
+        .custom-table thead th {
+            padding: 1rem;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .custom-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        
+        .custom-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .custom-table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        /* Badges */
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .badge-fake {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-real {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color), #4f7e63ff);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        /* Forms */
+        .form-custom .form-control,
+        .form-custom .form-select {
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 0.85rem 1.25rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-custom .form-control:focus,
+        .form-custom .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h3>
+                <i class="bi bi-shield-check"></i>
+                FakeNews AI
+            </h3>
+        </div>
+        
+        <ul class="sidebar-menu">
+            {% if user.is_staff or user.profile.user_type == 'admin' or user.profile.user_type == 'moderator' %}
+                <!-- Admin Menu -->
+                <li><a href="{% url 'admin_panel:admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'admin_panel:user_management' %}" class="{% if request.resolver_match.url_name == 'user_management' %}active{% endif %}">
+                    <i class="bi bi-people"></i> User Management
+                </a></li>
+                <li><a href="{% url 'admin_panel:content_moderation' %}" class="{% if request.resolver_match.url_name == 'content_moderation' %}active{% endif %}">
+                    <i class="bi bi-flag"></i> Content Moderation
+                </a></li>
+                <li><a href="{% url 'admin_panel:model_management' %}" class="{% if request.resolver_match.url_name == 'model_management' %}active{% endif %}">
+                    <i class="bi bi-cpu"></i> ML Models
+                </a></li>
+                <li><a href="{% url 'admin_panel:system_analytics' %}" class="{% if request.resolver_match.url_name == 'system_analytics' %}active{% endif %}">
+                    <i class="bi bi-graph-up"></i> System Analytics
+                </a></li>
+            {% else %}
+                <!-- User Menu -->
+                <li><a href="{% url 'dashboard:user_dashboard' %}" class="{% if request.resolver_match.url_name == 'user_dashboard' %}active{% endif %}">
+                    <i class="bi bi-house-door"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'news:submit_news' %}" class="{% if request.resolver_match.url_name == 'submit_news' %}active{% endif %}">
+                    <i class="bi bi-plus-circle"></i> Submit News
+                </a></li>
+                <li><a href="{% url 'news:news_history' %}" class="{% if request.resolver_match.url_name == 'news_history' %}active{% endif %}">
+                    <i class="bi bi-clock-history"></i> History
+                </a></li>
+                <li><a href="{% url 'dashboard:analytics' %}" class="{% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                    <i class="bi bi-bar-chart"></i> Analytics
+                </a></li>
+                <li><a href="{% url 'dashboard:notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    <i class="bi bi-bell"></i> Notifications
+                </a></li>
+            {% endif %}
+            
+            <li><a href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person"></i> Profile
+            </a></li>
+            <li><a href="{% url 'accounts:logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a></li>
+        </ul>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar">
+            <div class="search-bar">
+                <input type="text" class="form-control" placeholder="Search news, reports...">
+            </div>
+            
+            <div class="user-menu">
+                <div class="notification-icon">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications > 0 %}
+                    <span class="notification-badge">{{ unread_notifications }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="user-avatar">
+                    {{ user.username.0|upper }}
+                </div>
+                
+                <span class="fw-semibold">{{ user.username }}</span>
+            </div>
+        </nav>
+        
+        <!-- Messages -->
+        {% if messages %}
+        <div class="content-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Page Content -->
+        <div class="content-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

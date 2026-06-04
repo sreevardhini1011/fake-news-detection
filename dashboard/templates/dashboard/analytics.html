@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics - Fake News Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 400px;
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .keyword-tag {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .keyword-count {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        margin-left: 0.5rem;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Analytics Dashboard 📊</h1>
+    <p>Detailed insights and trends from your news verifications</p>
+</div>
+
+<!-- Summary Statistics -->
+<div class="stats-grid fade-in-up">
+    <div class="stat-card">
+        <div class="stat-card-icon primary">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <h3>{{ submissions.count }}</h3>
+        <p>Total Submissions (30 days)</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-icon danger">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3>{% widthratio submissions|length 1 1 %}</h3>
+        <p>Fake News Detected</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-icon success">
+            <i class="bi bi-check-circle"></i>
+        </div>
+        <h3>{% widthratio submissions|length 1 1 %}</h3>
+        <p>Real News Verified</p>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card-icon warning">
+            <i class="bi bi-speedometer"></i>
+        </div>
+        <h3>{{ avg_confidence|floatformat:1 }}%</h3>
+        <p>Avg Confidence Score</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Prediction Distribution Chart -->
+    <div class="col-lg-6">
+        <div class="chart-container fade-in-up">
+            <h4 class="mb-4">Prediction Distribution</h4>
+            <canvas id="predictionChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Monthly Trend Chart -->
+    <div class="col-lg-6">
+        <div class="chart-container fade-in-up">
+            <h4 class="mb-4">Verification Trend</h4>
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Top Flagged Keywords -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="stat-card fade-in-up">
+            <h4 class="mb-4">
+                <i class="bi bi-tags"></i> Most Flagged Keywords
+            </h4>
+            
+            {% if keyword_frequency %}
+                <div class="p-3 bg-light rounded">
+                    {% for keyword, count in keyword_frequency %}
+                        <span class="keyword-tag">
+                            {{ keyword }}
+                            <span class="keyword-count">{{ count }}</span>
+                        </span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No keywords data available yet. Submit more news for analysis.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Submissions Table -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="custom-table fade-in-up">
+            <div class="p-4">
+                <h4 class="mb-4">Recent Verifications</h4>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Title</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Sentiment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions|slice:":10" %}
+                        <tr>
+                            <td>{{ submission.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ submission.title|truncatewords:6 }}</div>
+                            </td>
+                            <td>
+                                {% if submission.prediction == 'fake' %}
+                                    <span class="badge-custom badge-fake">
+                                        <i class="bi bi-x-circle"></i> Fake
+                                    </span>
+                                {% elif submission.prediction == 'real' %}
+                                    <span class="badge-custom badge-real">
+                                        <i class="bi bi-check-circle"></i> Real
+                                    </span>
+                                {% else %}
+                                    <span class="badge-custom badge-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ submission.confidence_score|floatformat:1 }}%</strong>
+                            </td>
+                            <td>
+                                {% if submission.sentiment_score %}
+                                    {% if submission.sentiment_score > 0 %}
+                                        <span class="text-success">
+                                            <i class="bi bi-emoji-smile"></i> Positive
+                                        </span>
+                                    {% elif submission.sentiment_score < 0 %}
+                                        <span class="text-danger">
+                                            <i class="bi bi-emoji-frown"></i> Negative
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">
+                                            <i class="bi bi-emoji-neutral"></i> Neutral
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'news:submission_detail' submission.submission_id %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No data available. <a href="{% url 'news:submit_news' %}">Submit your first news</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Prediction Distribution Pie Chart
+    const predictionCtx = document.getElementById('predictionChart');
+    if (predictionCtx) {
+        const predictionData = {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    'rgba(239, 68, 68, 0.8)',   // Red for Fake
+                    'rgba(16, 185, 129, 0.8)',  // Green for Real
+                    'rgba(245, 158, 11, 0.8)'   // Orange for Uncertain
+                ],
+                borderWidth: 0
+            }]
+        };
+
+        {% for stat in prediction_stats %}
+            predictionData.labels.push('{{ stat.prediction|title }}');
+            predictionData.datasets[0].data.push({{ stat.count }});
+        {% endfor %}
+
+        new Chart(predictionCtx, {
+            type: 'doughnut',
+            data: predictionData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                family: 'Inter'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.parsed || 0;
+                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Trend Line Chart
+    const trendCtx = document.getElementById('trendChart');
+    if (trendCtx) {
+        const trendData = {
+            labels: [],
+            datasets: [{
+                label: 'Submissions',
+                data: [],
+                borderColor: 'rgba(102, 126, 234, 1)',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        };
+
+        // Generate last 7 days data
+        const dates = [];
+        const counts = new Array(7).fill(0);
+        
+        {% for submission in submissions %}
+            const submissionDate = new Date('{{ submission.created_at|date:"Y-m-d" }}');
+            const daysDiff = Math.floor((new Date() - submissionDate) / (1000 * 60 * 60 * 24));
+            if (daysDiff < 7) {
+                counts[6 - daysDiff]++;
+            }
+        {% endfor %}
+
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
+
+        trendData.labels = dates;
+        trendData.datasets[0].data = counts.reverse();
+
+        new Chart(trendCtx, {
+            type: 'line',
+            data: trendData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                family: 'Inter'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                family: 'Inter'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

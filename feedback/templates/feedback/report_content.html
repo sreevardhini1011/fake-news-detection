@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Content{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in-up">
+    <h1>Report Content</h1>
+    <p>Report suspicious or misclassified content</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="stat-card fade-in-up">
+            <form method="post" class="form-custom">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Report Type</label>
+                    {{ form.report_type }}
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                </div>
+                
+                <button type="submit" class="btn btn-warning btn-custom w-100">Submit Report</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
